@@ -35,21 +35,25 @@ def get_chat_config():
 def store_pdf_file(path: str, filename: str):
     # Implémentation pour stocker et vectoriser le PDF
     config = get_embedding_config()
-    # Utilise config["api_key"], etc. pour appeler Azure ou autre
-    # Par exemple, créer un vecteur à partir du pdf et stocker dans un vecteur store
     print(f"Stockage de {filename} avec clé {config['api_key'][:4]}...")  # Debug
 
 def delete_file_from_store(filename: str):
-    # Implémentation pour supprimer un document du store
     print(f"Suppression de {filename} du store")
 
-def answer_question(question: str) -> str:
+def answer_question(question: str, language: str = "français", k: int = 5) -> str:
     config = get_chat_config()
-    # Appelle l'API OpenAI Azure ou autre pour répondre à la question
-    # Ici placeholder
-    print(f"Question posée : {question}, avec clé {config['api_key'][:4]}...")
-    return f"Réponse fictive à la question : {question}"
-
+    inspect_vector_store()
+    docs = retrieve(question, k)  # <-- Passage du paramètre k ici
+    docs_content = "\n\n".join(doc.page_content for doc in docs)
+    print("Question:", question)
+    print("------")
+    for doc in docs:
+        print("Chunk:", doc.id)
+        print(doc.page_content)
+        print("------")
+    messages = build_qa_messages(question, docs_content, language)
+    response = llm.invoke(messages)
+    return response.content
 
 
 embedder = AzureOpenAIEmbeddings(
@@ -69,43 +73,36 @@ llm = AzureChatOpenAI(
 )
 
 def get_meta_doc(extract: str) -> str:
-    """Generate a synthetic metadata description of the content.
-    """
     messages = [
-    (
-        "system",
-        "You are a librarian extracting metadata from documents.",
-    ),
-    (
-        "user",
-        """Extract from the content the following metadata.
-        Answer 'unknown' if you cannot find or generate the information.
-        Metadata list:
-        - title
-        - author
-        - source
-        - type of content (e.g. scientific paper, litterature, news, etc.)
-        - language
-        - themes as a list of keywords
+        (
+            "system",
+            "You are a librarian extracting metadata from documents.",
+        ),
+        (
+            "user",
+            """Extract from the content the following metadata.
+            Answer 'unknown' if you cannot find or generate the information.
+            Metadata list:
+            - title
+            - author
+            - source
+            - type of content (e.g. scientific paper, litterature, news, etc.)
+            - language
+            - themes as a list of keywords
 
-        <content>
-        {}
-        </content>
-        """.format(extract),
-    ),]
+            <content>
+            {}
+            </content>
+            """.format(extract),
+        ),
+    ]
     response = llm.invoke(messages)
     return response.content
 
 
 def store_pdf_file(file_path: str, doc_name: str, use_meta_doc: bool=True):
-    """Store a pdf file in the vector store.
-
-    Args:
-        file_path (str): file path to the PDF file
-    """
     loader = PyMuPDFLoader(file_path)
     docs = loader.load()
-    # TODO: make a constant of chunk_size and chunk_overlap
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE,
                                                    chunk_overlap=CHUNK_OVERLAP)
     all_splits = text_splitter.split_documents(docs)
@@ -113,14 +110,14 @@ def store_pdf_file(file_path: str, doc_name: str, use_meta_doc: bool=True):
         split.metadata = {
             'document_name': doc_name,
             'insert_date': datetime.now()
-            }
+        }
     if use_meta_doc:
         extract = '\n\n'.join([split.page_content for split in all_splits[:min(10, len(all_splits))]])
         meta_doc = Document(page_content=get_meta_doc(extract),
                             metadata={
                                 'document_name': doc_name,
                                 'insert_date': datetime.now()
-                                })
+                            })
         all_splits.append(meta_doc)
     _ = vector_store.add_documents(documents=all_splits)
     return
@@ -132,7 +129,6 @@ def delete_file_from_store(name: str) -> int:
         if name == doc['metadata']['document_name']:
             ids_to_remove.append(id)
     vector_store.delete(ids_to_remove)
-    #print('File deleted:', name)
     return len(ids_to_remove)
 
 
@@ -145,9 +141,7 @@ def inspect_vector_store(top_n: int=10) -> list:
                 'document_name': doc['metadata']['document_name'],
                 'insert_date': doc['metadata']['insert_date'],
                 'text': doc['text']
-                })
-            # docs have keys 'id', 'vector', 'text', 'metadata'
-            # print(f"{id} {doc['metadata']['document_name']}: {doc['text']}")
+            })
         else:
             break
     return docs
@@ -172,16 +166,8 @@ def get_vector_store_info():
     }
 
 
-def retrieve(question: str):
-    """Retrieve documents similar to a question.
-
-    Args:
-        question (str): text of the question
-
-    Returns:
-        list[TODO]: list of similar documents retrieved from the vector store
-    """
-    retrieved_docs = vector_store.similarity_search(question)
+def retrieve(question: str, k: int = 5):
+    retrieved_docs = vector_store.similarity_search(question, k=k)  # <-- k passé ici
     return retrieved_docs
 
 
@@ -204,27 +190,3 @@ def build_qa_messages(question: str, context: str, language: str) -> list[str]:
         ),
     ]
     return messages
-
-
-def answer_question(question: str, language: str = "français") -> str:
-    """Answer a question by retrieving similar documents in the store.
-
-    Args:
-        question (str): text of the question
-
-    Returns:
-        str: text of the answer
-    """
-    inspect_vector_store()
-    docs = retrieve(question)
-    docs_content = "\n\n".join(doc.page_content for doc in docs)
-    print("Question:", question)
-    print("------")
-    for doc in docs:
-        print("Chunk:", doc.id)
-        print(doc.page_content)
-        print("------")
-    messages = build_qa_messages(question, docs_content, language)
-    response = llm.invoke(messages)
-    return response.content
-
