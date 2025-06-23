@@ -56,6 +56,16 @@ def main():
         st.session_state['stored_files'].remove(name)
         delete_file_from_store(name)
 
+
+    # Sélecteur du nombre de documents similaires à récupérer
+    k = st.slider(
+        label="Nombre de documents similaires à récupérer (k)",
+        min_value=1,
+        max_value=20,
+        value=5,
+        step=1
+    )
+
     # Sélecteur de langue
     language = st.selectbox(
         "Choisissez la langue de réponse",
@@ -68,7 +78,7 @@ def main():
 
     # Bouton pour lancer l’analyse
     if st.button("Analyser"):
-        model_response = answer_question(question, language)
+        model_response = answer_question(question, language, k)  # on ajoute k ici
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
     else:
         st.text_area("Zone de texte, réponse du modèle", value="", height=200)
