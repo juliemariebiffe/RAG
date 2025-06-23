@@ -72,7 +72,7 @@ language = st.selectbox(
 
      
     # Champ de question
-    question = st.text_input("Votre question ici")
+question = st.text_input("Votre question ici")
 
     # Bouton pour lancer l’analyse
     if st.button("Analyser"):
