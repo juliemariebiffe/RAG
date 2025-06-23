@@ -73,6 +73,7 @@ def main():
         index=0
     )
 
+
     # Champ de question
     question = st.text_input("Votre question ici")
 
@@ -80,8 +81,15 @@ def main():
     if st.button("Analyser"):
         model_response = answer_question(question, language, k)  # on ajoute k ici
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
-    else:
-        st.text_area("Zone de texte, réponse du modèle", value="", height=200)
+
+        feedback = st.feedback(
+            "Que pensez-vous de la qualité de la réponse ?",
+            feedback_type="rating",  # étoiles 1 à 5
+            key="user_feedback"
+        )
+        if feedback is not None:
+            print(f"Feedback utilisateur: {feedback}")
+
 
 if __name__ == "__main__":
     main()
