@@ -2,24 +2,24 @@ import streamlit as st
 from datetime import datetime
 
 from llama_index import (
-    VectorStoreIndex,
+    GPTVectorStoreIndex,
     SimpleVectorStore,
-    Settings,
+    ServiceContext,
     TextNode,
-    VectorStoreQuery,
 )
 from llama_index.readers.file import PyMuPDFReader
 from llama_index.embeddings import AzureOpenAIEmbedding
 from llama_index.llms import AzureOpenAI
 from llama_index.node_parser import SentenceSplitter
+from llama_index.indices.query.vector_store.base import VectorStoreQuery
 
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
-# Suppression de read_config et chargement yaml
 # Récupération directe des secrets Streamlit
 config = st.secrets  # dictionnaire des secrets définis dans secrets.toml
 
+# Initialisation LLM et embedder Azure OpenAI
 llm = AzureOpenAI(
     model=config["chat"]["azure_deployment"],
     deployment_name=config["chat"]["azure_deployment"],
@@ -36,8 +36,8 @@ embedder = AzureOpenAIEmbedding(
     api_version=config["embedding"]["azure_api_version"],
 )
 
-Settings.llm = llm
-Settings.embed_model = embedder
+# Créer un contexte de service regroupant LLM et embedding (recommandé)
+service_context = ServiceContext.from_defaults(llm=llm, embed_model=embedder)
 
 # Index global LlamaIndex, None si non créé ou réinitialisé
 index = None
@@ -68,6 +68,7 @@ def store_pdf_file(file_path: str, doc_name: str):
         node.metadata = src_doc.metadata
         nodes.append(node)
 
+    # Calculer les embeddings pour chaque noeud
     for node in nodes:
         node.embedding = embedder.get_text_embedding(
             node.get_content(metadata_mode="all")
@@ -76,7 +77,7 @@ def store_pdf_file(file_path: str, doc_name: str):
     vector_store.add(nodes)
 
     # Construire ou reconstruire l’index avec le vecteur mis à jour
-    index = VectorStoreIndex(vector_store=vector_store)
+    index = GPTVectorStoreIndex(vector_store=vector_store, service_context=service_context)
 
 def delete_file_from_store(name: str) -> int:
     raise NotImplementedError('Suppression non implémentée pour LlamaIndex')
@@ -99,7 +100,7 @@ def retrieve(question: str):
     query_result = index.query(vector_store_query)
     return query_result.nodes
 
-def build_qa_messages(question: str, context: str) -> list[str]:
+def build_qa_messages(question: str, context: str) -> list[tuple[str, str]]:
     messages = [
         (
             "system",
