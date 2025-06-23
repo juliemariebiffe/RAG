@@ -77,14 +77,18 @@ def main():
     # Champ de question
     question = st.text_input("Votre question ici")
 
+
     # Bouton pour lancer l’analyse
     if st.button("Analyser"):
         model_response = answer_question(question, language, k)  # on ajoute k ici
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
 
-        feedback = st.feedback(
+        # Notation de la réponse avec st.radio
+        feedback = st.radio(
             "Que pensez-vous de la qualité de la réponse ?",
-            feedback_type="rating",  # étoiles 1 à 5
+            options=[1, 2, 3, 4, 5],
+            index=4,
+            format_func=lambda x: f"{x} étoiles",
             key="user_feedback"
         )
         if feedback is not None:
