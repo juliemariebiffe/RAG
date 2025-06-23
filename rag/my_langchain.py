@@ -185,27 +185,28 @@ def retrieve(question: str):
     return retrieved_docs
 
 
-def build_qa_messages(question: str, context: str) -> list[str]:
+def build_qa_messages(question: str, context: str, language: str) -> list[str]:
     messages = [
-    (
-        "system",
-        "You are an assistant for question-answering tasks.",
-    ),
-    (
-        "system",
-        """Use the following pieces of retrieved context to answer the question.
-        If you don't know the answer, just say that you don't know.
-        Use three sentences maximum and keep the answer concise.
-        {}""".format(context),
-    ),
-    (  
-        "user",
-        question
-    ),]
+        (
+            "system",
+            "You are an assistant for question-answering tasks.",
+        ),
+        (
+            "system",
+            f"Use the following pieces of retrieved context to answer the question in {language}. "
+            "If you don't know the answer, just say that you don't know. "
+            "Use three sentences maximum and keep the answer concise.\n"
+            f"{context}"
+        ),
+        (
+            "user",
+            question
+        ),
+    ]
     return messages
 
 
-def answer_question(question: str) -> str:
+def answer_question(question: str, language: str = "français") -> str:
     """Answer a question by retrieving similar documents in the store.
 
     Args:
@@ -223,7 +224,7 @@ def answer_question(question: str) -> str:
         print("Chunk:", doc.id)
         print(doc.page_content)
         print("------")
-    messages = build_qa_messages(question, docs_content)
+    messages = build_qa_messages(question, docs_content, language)
     response = llm.invoke(messages)
     return response.content
 
