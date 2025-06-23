@@ -62,12 +62,14 @@ def main():
         st.session_state['stored_files'].remove(name)
         delete_file_from_store(name)
 
-# Sélecteur de langue
+    # Sélecteur de langue
 language = st.selectbox(
     "Choisissez la langue de réponse",
     options=["français", "anglais", "espagnol", "allemand"], 
     index=0  # valeur par défaut : français
 )
+
+
      
     # Champ de question
     question = st.text_input("Votre question ici")
