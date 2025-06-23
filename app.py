@@ -16,7 +16,6 @@ st.set_page_config(
 if 'stored_files' not in st.session_state:
     st.session_state['stored_files'] = []
 
-
 def main():
     # Titre et explications
     st.title("Analyse de documents")
@@ -42,56 +41,36 @@ def main():
 
             if f.name.endswith('.pdf') and f.name not in st.session_state['stored_files']:
                 temp_dir = tempfile.mkdtemp()
-                path = os.path.join(temp_dir, "temp.pdf")  # Give it a name, like temp.pdf
+                path = os.path.join(temp_dir, "temp.pdf")
                 with open(path, "wb") as outfile:
-                    outfile.write(f.read()) # Use f.read() to get the bytes
+                    outfile.write(f.read())
                 store_pdf_file(path, f.name)
                 st.session_state['stored_files'].append(f.name)
-        
-
 
         df = pd.DataFrame(file_info)
-        st.table(df)  # on affiche le tableau
+        st.table(df)
 
     # Gestion de la suppression de documents
     files_to_be_deleted = set(st.session_state['stored_files']) - {f['Nom du fichier'] for f in file_info}
-    # print(set(st.session_state['stored_files']))
-    # print({f['Nom du fichier'] for f in file_info})
-    # print(files_to_be_deleted)
     for name in files_to_be_deleted:
         st.session_state['stored_files'].remove(name)
         delete_file_from_store(name)
 
     # Sélecteur de langue
-language = st.selectbox(
-    "Choisissez la langue de réponse",
-    options=["français", "anglais", "espagnol", "allemand"], 
-    index=0  # valeur par défaut : français
-)
+    language = st.selectbox(
+        "Choisissez la langue de réponse",
+        options=["français", "anglais", "espagnol", "allemand"], 
+        index=0
+    )
 
-
-     
     # Champ de question
-question = st.text_input("Votre question ici")
+    question = st.text_input("Votre question ici")
 
     # Bouton pour lancer l’analyse
     if st.button("Analyser"):
-        # ========
-        # ICI : vous pouvez implémenter la logique d’analyse,
-        # par exemple interroger un modèle de NLP (ex: GPT, spaCy, etc.)
-        # en lui passant la question et le contenu des fichiers.
-        # ========
-        
-        # On met un placeholder de réponse pour la démonstration
-        #reponse_modele = f"Voici une réponse fictive à la question : {question}"
-        
         model_response = answer_question(question, language)
-
-        # Affichage de la réponse
-        st.text_area("Zone de texte, réponse du modèle",
-                     value=model_response, height=200)
+        st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
     else:
-        # Zone vide ou explicative quand on n'a pas encore analysé
         st.text_area("Zone de texte, réponse du modèle", value="", height=200)
 
 if __name__ == "__main__":
