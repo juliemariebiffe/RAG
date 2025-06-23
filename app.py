@@ -14,7 +14,7 @@ st.set_page_config(
     page_icon="👋",
 )
 
-# --- Base SQLite pour feedback ---
+# --- Base SQLite pour feedback et questions ---
 
 def init_db():
     conn = sqlite3.connect("feedback.db")
@@ -23,6 +23,14 @@ def init_db():
         CREATE TABLE IF NOT EXISTS feedback (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             note INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            reponse TEXT NOT NULL,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             question TEXT NOT NULL,
             reponse TEXT NOT NULL,
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -41,10 +49,28 @@ def insert_feedback(note: int, question: str, reponse: str):
     conn.commit()
     conn.close()
 
+def insert_question(question: str, reponse: str):
+    conn = sqlite3.connect("feedback.db")
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO questions (question, reponse) VALUES (?, ?)",
+        (question, reponse)
+    )
+    conn.commit()
+    conn.close()
+
 def get_all_feedbacks():
     conn = sqlite3.connect("feedback.db")
     c = conn.cursor()
     c.execute("SELECT id, note, question, reponse, date FROM feedback ORDER BY date DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def get_all_questions():
+    conn = sqlite3.connect("feedback.db")
+    c = conn.cursor()
+    c.execute("SELECT id, question, reponse, date FROM questions ORDER BY date DESC")
     rows = c.fetchall()
     conn.close()
     return rows
@@ -109,6 +135,9 @@ def analyse_page():
         model_response = answer_question(question, language, k)
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
 
+        # Stocker question + réponse dans historique
+        insert_question(question, model_response)
+
         feedback = st.radio(
             "Que pensez-vous de la qualité de la réponse ?",
             options=[1, 2, 3, 4, 5],
@@ -138,14 +167,29 @@ def feedback_page():
 
     st.dataframe(df)
 
+def questions_page():
+    st.title("Historique des questions posées")
+
+    questions = get_all_questions()
+
+    if not questions:
+        st.info("Aucune question enregistrée pour le moment.")
+        return
+
+    df = pd.DataFrame(questions, columns=["ID", "Question", "Réponse", "Date"])
+
+    st.dataframe(df)
+
 def main():
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Aller à", ["Analyse de documents", "Feedback utilisateurs"])
+    page = st.sidebar.radio("Aller à", ["Analyse de documents", "Feedback utilisateurs", "Historique des questions"])
 
     if page == "Analyse de documents":
         analyse_page()
     elif page == "Feedback utilisateurs":
         feedback_page()
+    elif page == "Historique des questions":
+        questions_page()
 
 if __name__ == "__main__":
     init_db()
