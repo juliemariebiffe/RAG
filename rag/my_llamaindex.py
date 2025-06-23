@@ -1,4 +1,4 @@
-from llama_index import GPTVectorStoreIndex
+from llama_index import VectorStoreIndex
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
@@ -35,7 +35,7 @@ class MyLlamaIndex:
         if not self.documents:
             self.index = None
             return
-        self.index = GPTVectorStoreIndex.from_documents(self.documents)
+        self.index = VectorStoreIndex.from_documents(self.documents)
 
     def answer_question(self, question: str) -> str:
         if self.index is None:
