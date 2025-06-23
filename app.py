@@ -62,6 +62,13 @@ def main():
         st.session_state['stored_files'].remove(name)
         delete_file_from_store(name)
 
+# Sélecteur de langue
+language = st.selectbox(
+    "Choisissez la langue de réponse",
+    options=["français", "anglais", "espagnol", "allemand"], 
+    index=0  # valeur par défaut : français
+)
+     
     # Champ de question
     question = st.text_input("Votre question ici")
 
@@ -76,7 +83,7 @@ def main():
         # On met un placeholder de réponse pour la démonstration
         #reponse_modele = f"Voici une réponse fictive à la question : {question}"
         
-        model_response = answer_question(question)
+        model_response = answer_question(question, language)
 
         # Affichage de la réponse
         st.text_area("Zone de texte, réponse du modèle",
