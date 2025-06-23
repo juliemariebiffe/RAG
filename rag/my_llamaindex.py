@@ -1,126 +1,124 @@
+import os
+import tempfile
+
 import streamlit as st
-from datetime import datetime
+import pandas as pd
 
-from llama_index.core import VectorStoreIndex
-from llama_index.core import Settings
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import TextNode
-from llama_index.core.vector_stores import SimpleVectorStore
-from llama_index.core.vector_stores import VectorStoreQuery
+from rag import my_langchain
+from rag import my_llamaindex  # On importe le module, pas une classe
 
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.chat_models import ChatOpenAI
-
-from llama_index.readers.file import PyMuPDFReader
-
-CHUNK_SIZE = 1_000
-CHUNK_OVERLAP = 200
-
-# Récupération des secrets depuis streamlit secrets.toml
-openai_api_key = st.secrets["openai_api_key"]
-
-# Initialisation embeddings OpenAI
-embedder = OpenAIEmbeddings(
-    openai_api_key=openai_api_key,
-    model="text-embedding-3-large",  # adapte selon ton besoin
+st.set_page_config(
+    page_title="Analyse de documents",
+    page_icon="👋",
 )
 
-# Initialisation modèle ChatOpenAI
-llm = ChatOpenAI(
-    openai_api_key=openai_api_key,
-    model_name="gpt-4o-mini",  # adapte selon ton besoin
-    temperature=0.0,
-)
-
-Settings.llm = llm
-Settings.embed_model = embedder
-
-vector_store = SimpleVectorStore()
+# Initialisation des états
+if 'stored_files' not in st.session_state:
+    st.session_state['stored_files'] = []
+if 'framework' not in st.session_state:
+    st.session_state['framework'] = "langchain"
 
 
-def store_pdf_file(file_path: str, doc_name: str):
-    loader = PyMuPDFReader()
-    documents = loader.load(file_path)
-
-    text_parser = SentenceSplitter(chunk_size=CHUNK_SIZE)
-    text_chunks = []
-    doc_idxs = []
-
-    for doc_idx, doc in enumerate(documents):
-        cur_text_chunks = text_parser.split_text(doc.text)
-        text_chunks.extend(cur_text_chunks)
-        doc_idxs.extend([doc_idx] * len(cur_text_chunks))
-
-    nodes = []
-    for idx, text_chunk in enumerate(text_chunks):
-        node = TextNode(text=text_chunk)
-        src_doc = documents[doc_idxs[idx]]
-        node.metadata = src_doc.metadata
-        nodes.append(node)
-
-    for node in nodes:
-        node_embedding = embedder.embed_query(node.get_content(metadata_mode="all"))
-        node.embedding = node_embedding
-
-    vector_store.add(nodes)
+def clear_indexes():
+    my_langchain.clear_index()
+    # Pas de fonction clear_index dans my_llamaindex.py pour l’instant
+    # Si tu veux, tu peux ajouter une fonction clear_index dans my_llamaindex.py
+    # Ici on laisse vide ou on peut réinitialiser le vector_store si tu modifies my_llamaindex.py
 
 
-def delete_file_from_store(name: str) -> int:
-    raise NotImplemented('function not implemented for Llamaindex')
+def main():
+    st.title("Analyse de documents")
+    st.subheader("Analysez vos documents avec une IA en les chargeant dans l'application. Puis posez toutes vos questions.")
 
-
-def inspect_vector_store(top_n: int = 10) -> list:
-    raise NotImplemented('function not implemented for Llamaindex')
-
-
-def get_vector_store_info():
-    raise NotImplemented('function not implemented for Llamaindex')
-
-
-def retrieve(question: str):
-    query_embedding = embedder.embed_query(question)
-
-    query_mode = "default"
-    vector_store_query = VectorStoreQuery(
-        query_embedding=query_embedding, similarity_top_k=5, mode=query_mode
+    # Choix du framework
+    framework = st.radio(
+        "Choisissez le framework d'indexation",
+        options=["langchain", "llamaindex"],
+        index=0 if st.session_state['framework'] == "langchain" else 1
     )
 
-    query_result = vector_store.query(vector_store_query)
-    return query_result.nodes
+    if framework != st.session_state['framework']:
+        st.session_state['stored_files'] = []
+        clear_indexes()
+        st.session_state['framework'] = framework
+        st.experimental_rerun()
+
+    uploaded_files = st.file_uploader(
+        label="Déposez vos fichiers ici ou chargez-les",
+        accept_multiple_files=True
+    )
+
+    file_info = []
+    if uploaded_files:
+        for f in uploaded_files:
+            size_in_kb = len(f.getvalue()) / 1024
+            file_info.append({
+                "Nom du fichier": f.name,
+                "Taille (KB)": f"{size_in_kb:.2f}"
+            })
+
+            if f.name.endswith('.pdf') and f.name not in st.session_state['stored_files']:
+                temp_dir = tempfile.mkdtemp()
+                path = os.path.join(temp_dir, f.name)
+                with open(path, "wb") as outfile:
+                    outfile.write(f.read())
+                if framework == "langchain":
+                    my_langchain.store_pdf_file(path, f.name)
+                else:
+                    my_llamaindex.store_pdf_file(path, f.name)
+                st.session_state['stored_files'].append(f.name)
+
+        df = pd.DataFrame(file_info)
+        st.table(df)
+
+    # Suppression des fichiers supprimés
+    current_files = {f['Nom du fichier'] for f in file_info}
+    files_to_be_deleted = set(st.session_state['stored_files']) - current_files
+    for name in files_to_be_deleted:
+        st.session_state['stored_files'].remove(name)
+        if framework == "langchain":
+            my_langchain.delete_file_from_store(name)
+        # Note : llamaindex ne gère pas la suppression d’un document individuellement
+
+    # Slider k (pour Langchain uniquement pour l’instant)
+    k = st.slider(
+        label="Nombre de documents similaires à récupérer (k)",
+        min_value=1,
+        max_value=20,
+        value=5,
+        step=1
+    )
+
+    # Choix de langue (pas utilisé dans my_llamaindex.py, ok)
+    language = st.selectbox(
+        "Choisissez la langue de réponse",
+        options=["français", "anglais", "espagnol", "allemand"],
+        index=0
+    )
+
+    # Saisie de la question
+    question = st.text_input("Votre question ici")
+
+    if st.button("Analyser"):
+        if not question:
+            st.warning("Veuillez entrer une question avant d'analyser.")
+        else:
+            if framework == "langchain":
+                model_response = my_langchain.answer_question(question, language, k)
+            else:
+                model_response = my_llamaindex.answer_question(question)
+            st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
+
+            feedback = st.radio(
+                "Que pensez-vous de la qualité de la réponse ?",
+                options=[1, 2, 3, 4, 5],
+                index=4,
+                format_func=lambda x: f"{x} étoiles",
+                key="user_feedback"
+            )
+            if feedback is not None:
+                print(f"Feedback utilisateur: {feedback}")
 
 
-def build_qa_messages(question: str, context: str) -> list[tuple[str, str]]:
-    messages = [
-        (
-            "system",
-            "You are an assistant for question-answering tasks.",
-        ),
-        (
-            "system",
-            f"""Use the following pieces of retrieved context to answer the question.
-If you don't know the answer, just say that you don't know.
-Use three sentences maximum and keep the answer concise.
-{context}""",
-        ),
-        (
-            "user",
-            question,
-        ),
-    ]
-    return messages
-
-
-def answer_question(question: str) -> str:
-    docs = retrieve(question)
-    docs_content = "\n\n".join(doc.get_content() for doc in docs)
-
-    print("Question:", question)
-    print("------")
-    for doc in docs:
-        print("Chunk:", doc.id)
-        print(doc.page_content)
-        print("------")
-
-    messages = build_qa_messages(question, docs_content)
-    response = llm.invoke(messages)
-    return response.content
+if __name__ == "__main__":
+    main()
