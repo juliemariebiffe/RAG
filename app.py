@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 
 from rag import my_langchain
-from rag import llamaindex
+from rag import my_llamaindex
 
 st.set_page_config(
     page_title="Analyse de documents",
