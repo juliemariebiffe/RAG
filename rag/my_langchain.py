@@ -1,10 +1,10 @@
 import streamlit as st
 from datetime import datetime
 
-from langchain_community.document_loaders import PyMuPDFLoader
+from langchain.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_core.documents import Document
+from langchain.vectorstores import InMemoryVectorStore
+from langchain.schema import Document
 
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_openai import AzureChatOpenAI
@@ -83,9 +83,11 @@ def answer_question(question: str, language: str = "français", k: int = 5) -> s
     messages = [
         {
             "role": "system",
-            "content": f"You are an assistant answering questions in {language}. "
-                       "Use the provided context to answer the question. "
-                       "If unsure, say you don't know."
+            "content": (
+                f"You are an assistant answering questions in {language}. "
+                "Use the provided context to answer the question. "
+                "If unsure, say you don't know."
+            )
         },
         {
             "role": "user",
