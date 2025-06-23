@@ -1,4 +1,3 @@
-import yaml
 import streamlit as st
 from datetime import datetime
 
@@ -17,10 +16,39 @@ CHUNK_OVERLAP = 200
 
 config = st.secrets
 
+def get_embedding_config():
+    return {
+        "api_key": st.secrets["embedding"]["azure_api_key"],
+        "endpoint": st.secrets["embedding"]["azure_endpoint"],
+        "deployment": st.secrets["embedding"]["azure_deployment"],
+        "api_version": st.secrets["embedding"]["azure_api_version"],
+    }
 
-import streamlit as st
+def get_chat_config():
+    return {
+        "api_key": st.secrets["chat"]["azure_api_key"],
+        "endpoint": st.secrets["chat"]["azure_endpoint"],
+        "deployment": st.secrets["chat"]["azure_deployment"],
+        "api_version": st.secrets["chat"]["azure_api_version"],
+    }
 
-config = st.secrets
+def store_pdf_file(path: str, filename: str):
+    # Implémentation pour stocker et vectoriser le PDF
+    config = get_embedding_config()
+    # Utilise config["api_key"], etc. pour appeler Azure ou autre
+    # Par exemple, créer un vecteur à partir du pdf et stocker dans un vecteur store
+    print(f"Stockage de {filename} avec clé {config['api_key'][:4]}...")  # Debug
+
+def delete_file_from_store(filename: str):
+    # Implémentation pour supprimer un document du store
+    print(f"Suppression de {filename} du store")
+
+def answer_question(question: str) -> str:
+    config = get_chat_config()
+    # Appelle l'API OpenAI Azure ou autre pour répondre à la question
+    # Ici placeholder
+    print(f"Question posée : {question}, avec clé {config['api_key'][:4]}...")
+    return f"Réponse fictive à la question : {question}"
 
 
 embedder = AzureOpenAIEmbeddings(
