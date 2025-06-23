@@ -1,4 +1,4 @@
-import yaml
+import streamlit as st
 from datetime import datetime
 
 from llama_index import (
@@ -16,15 +16,9 @@ from llama_index.node_parser import SentenceSplitter
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
-def read_config(file_path):
-    with open(file_path, 'r') as file:
-        try:
-            return yaml.safe_load(file)
-        except yaml.YAMLError as e:
-            print(f"Error reading YAML file: {e}")
-            return None
-
-config = read_config("secrets/config.yaml")
+# Suppression de read_config et chargement yaml
+# Récupération directe des secrets Streamlit
+config = st.secrets  # dictionnaire des secrets définis dans secrets.toml
 
 llm = AzureOpenAI(
     model=config["chat"]["azure_deployment"],
