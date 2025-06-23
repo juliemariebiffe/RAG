@@ -8,7 +8,7 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 
 ---
 
-## ✨ Aperçu
+## Aperçu
 
 - 📁 Téléversement de PDF
 - 🔍 Recherche contextuelle dans les documents
@@ -20,7 +20,7 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 
 ---
 
-## 🧪 Comment utiliser l'application
+## Comment utiliser l'application
 
 ### 1. Cloner le projet
 
@@ -70,7 +70,7 @@ L’interface est accessible à l’adresse : [https://rag-project-baronebiffe.s
 
 ---
 
-## 🗂️ Structure du projet
+## 🗂 Structure du projet
 
 ```
 .
@@ -85,20 +85,20 @@ L’interface est accessible à l’adresse : [https://rag-project-baronebiffe.s
 
 ---
 
-## ✅ Fonctionnalités principales
+## Fonctionnalités principales
 
 | Fonction                   | Description                                        |
 |---------------------------|----------------------------------------------------|
-| 📄 Téléversement          | Support des fichiers PDF                          |
-| 🤖 Chat intelligent       | Posez des questions en langage naturel            |
-| 🧠 Vectorisation          | FAISS + Azure OpenAI pour recherche sémantique    |
-| ⭐ Feedback                | Système de notation (1 à 5 étoiles) + commentaires|
-| 🕓 Historique              | Visualisation des anciennes questions             |
-| 🌐 Langues                | Choix : FR, EN, ES, DE                            |
+|  Téléversement          | Support des fichiers PDF                          |
+|  Chat intelligent       | Posez des questions en langage naturel            |
+|  Vectorisation          | FAISS + Azure OpenAI pour recherche sémantique    |
+|  Feedback                | Système de notation (1 à 5 étoiles) + commentaires|
+|  Historique              | Visualisation des anciennes questions             |
+|  Langues                | Choix : FR, EN, ES, DE                            |
 
 ---
 
-## 👣 Exemple de flow utilisateur
+##  Exemple de flow utilisateur
 
 1. L'utilisateur téléverse un fichier PDF.
 2. Il pose une question en français.
@@ -109,7 +109,7 @@ L’interface est accessible à l’adresse : [https://rag-project-baronebiffe.s
 
 ---
 
-## 🧹 Personnalisation
+##  Personnalisation
 
 Tu peux modifier :
 - les paramètres du moteur dans `rag/my_langchain.py`
@@ -118,7 +118,7 @@ Tu peux modifier :
 
 ---
 
-## 💻 Exigences
+##  Exigences
 
 - Python 3.10+
 - Azure OpenAI déployé avec :
@@ -127,7 +127,7 @@ Tu peux modifier :
 
 ---
 
-## 🤝 Contribuer
+##  Contribuer
 
 Les contributions sont les bienvenues !  
-N'hésitez pas à ouvrir une *issue* ou soumettre une *pull request* 🚀
+N'hésitez pas à ouvrir une *issue* ou soumettre une *pull request* :)
