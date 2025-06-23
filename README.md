@@ -3,7 +3,7 @@
 Ce projet propose une interface pour charger des documents pour constituer une base de connaissance qui pourra être questionnée avec un grand modèle de langage (_LLM_).
 
 
-# 📄 Analyse de Documents avec IA (Streamlit App)
+# Analyse de Documents avec IA (Streamlit App)
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Built with](https://img.shields.io/badge/Built_with-Streamlit-blue)
@@ -13,7 +13,7 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 
 ---
 
-## ✨ Aperçu
+##  Aperçu
 
 - 📁 Téléversement de PDF
 - 🔍 Recherche contextuelle dans les documents
@@ -23,7 +23,7 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 - 🧠 Vectorisation via Azure OpenAI + FAISS
 - 🗃️ Stockage des feedbacks/questions avec SQLite
 
----
+
 
 ## 🧪 Comment utiliser l'application
 
@@ -32,21 +32,21 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 ```bash
 git clone https://github.com/votre-utilisateur/analyse-documents-ia.git
 cd analyse-documents-ia
-
+---
 
 ## 2. Créer un environnement virtuel
-
+---
 python -m venv venv
 source venv/bin/activate  # Windows: .\venv\Scripts\activate
-
+---
 
 ## 3. Installer les dépendances
-
+---
 pip install -r requirements.txt
-
+---
 
 ## 4. Configurer les clés AzureOpenAI
-
+---
 [embedding]
 azure_api_key = "VOTRE_CLE"
 azure_endpoint = "https://votre-endpoint.openai.azure.com/"
@@ -58,12 +58,12 @@ azure_api_key = "VOTRE_CLE"
 azure_endpoint = "https://votre-endpoint.openai.azure.com/"
 azure_deployment = "chat-deployment"
 azure_api_version = "2024-03-01-preview"
-
+---
 
 ## 5. Lancer l'application
-
+---
 streamlit run app.py
-
+---
 L’interface est accessible à l’adresse : https://rag-project-baronebiffe.streamlit.app/
 
 
@@ -118,5 +118,5 @@ Il est possible de modifier les paramètres du moteur dans rag/my_langchain.py, 
 
 ## Contribuer
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou proposer une pull request 🚀
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou proposer une pull request :)
 
