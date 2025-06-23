@@ -3,4 +3,4 @@ langchain-openai
 langchain_community
 pymupdf
 streamlit
-llama-index
+llama-index==0.5.8
