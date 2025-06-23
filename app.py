@@ -14,7 +14,8 @@ st.set_page_config(
     page_icon="👋",
 )
 
-# Initialisation de la base SQLite pour le feedback
+# --- Base SQLite pour feedback ---
+
 def init_db():
     conn = sqlite3.connect("feedback.db")
     c = conn.cursor()
@@ -30,7 +31,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Fonction pour insérer un feedback dans la base
 def insert_feedback(note: int, question: str, reponse: str):
     conn = sqlite3.connect("feedback.db")
     c = conn.cursor()
@@ -41,26 +41,32 @@ def insert_feedback(note: int, question: str, reponse: str):
     conn.commit()
     conn.close()
 
-if 'stored_files' not in st.session_state:
-    st.session_state['stored_files'] = []
+def get_all_feedbacks():
+    conn = sqlite3.connect("feedback.db")
+    c = conn.cursor()
+    c.execute("SELECT id, note, question, reponse, date FROM feedback ORDER BY date DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
 
-def main():
-    # Titre et explications
+# --- Pages Streamlit ---
+
+def analyse_page():
+    if 'stored_files' not in st.session_state:
+        st.session_state['stored_files'] = []
+
     st.title("Analyse de documents")
     st.subheader("Analysez vos documents avec une IA en les chargeant dans l'application. Puis posez toutes vos questions.")
     
-    # Téléversement de fichiers multiples
     uploaded_files = st.file_uploader(
         label="Déposez vos fichiers ici ou chargez-les",
-        type=None,  # ou ['pdf', 'txt', 'docx', ...] selon vos besoins
+        type=None,
         accept_multiple_files=True
     )
     
-    # S'il y a des fichiers, on affiche leurs noms et tailles
     file_info = []
     if uploaded_files:
         for f in uploaded_files:
-            # La taille, en octets, se récupère via len(f.getvalue())
             size_in_kb = len(f.getvalue()) / 1024
             file_info.append({
                 "Nom du fichier": f.name,
@@ -78,14 +84,11 @@ def main():
         df = pd.DataFrame(file_info)
         st.table(df)
 
-    # Gestion de la suppression de documents
     files_to_be_deleted = set(st.session_state['stored_files']) - {f['Nom du fichier'] for f in file_info}
     for name in files_to_be_deleted:
         st.session_state['stored_files'].remove(name)
         delete_file_from_store(name)
 
-
-    # Sélecteur du nombre de documents similaires à récupérer
     k = st.slider(
         label="Nombre de documents similaires à récupérer (k)",
         min_value=1,
@@ -94,22 +97,18 @@ def main():
         step=1
     )
 
-    # Sélecteur de langue
     language = st.selectbox(
         "Choisissez la langue de réponse",
         options=["français", "anglais", "espagnol", "allemand"], 
         index=0
     )
 
-    # Champ de question
     question = st.text_input("Votre question ici")
 
-    # Bouton pour lancer l’analyse
     if st.button("Analyser") and question.strip() != "":
-        model_response = answer_question(question, language, k)  # on ajoute k ici
+        model_response = answer_question(question, language, k)
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
 
-        # Notation de la réponse avec st.radio
         feedback = st.radio(
             "Que pensez-vous de la qualité de la réponse ?",
             options=[1, 2, 3, 4, 5],
@@ -118,10 +117,35 @@ def main():
             key="user_feedback"
         )
 
-        # Enregistrement du feedback dans la base SQLite
         if feedback is not None and model_response.strip() != "":
             insert_feedback(feedback, question, model_response)
             st.success("Merci pour votre feedback !")
+
+def feedback_page():
+    st.title("Consultation des feedbacks utilisateurs")
+
+    feedbacks = get_all_feedbacks()
+
+    if not feedbacks:
+        st.info("Aucun feedback enregistré pour le moment.")
+        return
+
+    df = pd.DataFrame(feedbacks, columns=["ID", "Note", "Question", "Réponse", "Date"])
+
+    notes_filter = st.multiselect("Filtrer par notes", options=[1,2,3,4,5], default=[1,2,3,4,5])
+    if notes_filter:
+        df = df[df["Note"].isin(notes_filter)]
+
+    st.dataframe(df)
+
+def main():
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio("Aller à", ["Analyse de documents", "Feedback utilisateurs"])
+
+    if page == "Analyse de documents":
+        analyse_page()
+    elif page == "Feedback utilisateurs":
+        feedback_page()
 
 if __name__ == "__main__":
     init_db()
