@@ -1,5 +1,6 @@
 import os
 import tempfile
+import sqlite3
 
 import streamlit as st
 import pandas as pd
@@ -12,6 +13,33 @@ st.set_page_config(
     page_title="Analyse de documents",
     page_icon="👋",
 )
+
+# Initialisation de la base SQLite pour le feedback
+def init_db():
+    conn = sqlite3.connect("feedback.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            note INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            reponse TEXT NOT NULL,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+# Fonction pour insérer un feedback dans la base
+def insert_feedback(note: int, question: str, reponse: str):
+    conn = sqlite3.connect("feedback.db")
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO feedback (note, question, reponse) VALUES (?, ?, ?)",
+        (note, question, reponse)
+    )
+    conn.commit()
+    conn.close()
 
 if 'stored_files' not in st.session_state:
     st.session_state['stored_files'] = []
@@ -73,13 +101,11 @@ def main():
         index=0
     )
 
-
     # Champ de question
     question = st.text_input("Votre question ici")
 
-
     # Bouton pour lancer l’analyse
-    if st.button("Analyser"):
+    if st.button("Analyser") and question.strip() != "":
         model_response = answer_question(question, language, k)  # on ajoute k ici
         st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
 
@@ -91,10 +117,12 @@ def main():
             format_func=lambda x: f"{x} étoiles",
             key="user_feedback"
         )
-        if feedback is not None:
-            print(f"Feedback utilisateur: {feedback}")
 
+        # Enregistrement du feedback dans la base SQLite
+        if feedback is not None and model_response.strip() != "":
+            insert_feedback(feedback, question, model_response)
+            st.success("Merci pour votre feedback !")
 
 if __name__ == "__main__":
+    init_db()
     main()
-
