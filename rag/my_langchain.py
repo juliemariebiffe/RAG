@@ -1,9 +1,9 @@
 import streamlit as st
 from datetime import datetime
 
-from langchain.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 
 from langchain_openai import AzureOpenAIEmbeddings
@@ -28,7 +28,6 @@ llm = AzureChatOpenAI(
     api_key=config["chat"]["azure_api_key"]
 )
 
-# Vectorstore global (FAISS)
 vector_store = None
 
 def clear_index():
@@ -61,17 +60,12 @@ def store_pdf_file(file_path: str, doc_name: str, use_meta_doc: bool=True):
         all_splits.append(meta_doc)
 
     if vector_store is None:
-        # Création du vector_store FAISS à partir des documents
         vector_store = FAISS.from_documents(all_splits, embedder)
     else:
-        # Ajout des documents à l'index existant
         vector_store.add_documents(all_splits)
 
 def delete_file_from_store(doc_name: str) -> int:
     global vector_store
-    # FAISS ne permet pas de supprimer facilement un document individuel
-    # Pour gérer ça proprement, il faudrait reconstruire l’index sans ce document
-    # Ici on vide tout (à gérer dans ton app côté fichiers stockés)
     clear_index()
     return 0
 
@@ -82,7 +76,6 @@ def answer_question(question: str, language: str = "français", k: int = 5) -> s
         return "Aucun document indexé, veuillez charger des documents."
 
     docs = vector_store.similarity_search(question, k=k)
-
     context = "\n\n".join([doc.page_content for doc in docs])
 
     messages = [
