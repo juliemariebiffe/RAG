@@ -10,13 +10,13 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 
 ## Aperçu
 
-- 📁 Téléversement de PDF
-- 🔍 Recherche contextuelle dans les documents
-- 💬 Interface de chat multilingue (FR, EN, ES, DE)
-- ⭐ Notation et commentaire des réponses
-- 🕓 Historique des questions posées
-- 🧠 Vectorisation via Azure OpenAI + FAISS
-- 💃️ Stockage des feedbacks/questions avec SQLite
+-  Téléversement de PDF
+-  Recherche contextuelle dans les documents
+-  Interface de chat multilingue (FR, EN, ES, DE)
+-  Notation et commentaire des réponses
+-  Historique des questions posées
+-  Vectorisation via Azure OpenAI + FAISS
+-  Stockage des feedbacks/questions avec SQLite
 
 ---
 
