@@ -1,8 +1,3 @@
-# Analyse de documents
-
-Ce projet propose une interface pour charger des documents pour constituer une base de connaissance qui pourra être questionnée avec un grand modèle de langage (_LLM_).
-
-
 # Analyse de Documents avec IA (Streamlit App)
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -13,7 +8,7 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 
 ---
 
-##  Aperçu
+## ✨ Aperçu
 
 - 📁 Téléversement de PDF
 - 🔍 Recherche contextuelle dans les documents
@@ -21,9 +16,9 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 - ⭐ Notation et commentaire des réponses
 - 🕓 Historique des questions posées
 - 🧠 Vectorisation via Azure OpenAI + FAISS
-- 🗃️ Stockage des feedbacks/questions avec SQLite
+- 💃️ Stockage des feedbacks/questions avec SQLite
 
-
+---
 
 ## 🧪 Comment utiliser l'application
 
@@ -32,21 +27,26 @@ Cette application permet de poser des questions à partir de documents PDF tél�
 ```bash
 git clone https://github.com/votre-utilisateur/analyse-documents-ia.git
 cd analyse-documents-ia
----
+```
 
-## 2. Créer un environnement virtuel
----
+### 2. Créer un environnement virtuel
+
+```bash
 python -m venv venv
 source venv/bin/activate  # Windows: .\venv\Scripts\activate
----
+```
 
-## 3. Installer les dépendances
----
+### 3. Installer les dépendances
+
+```bash
 pip install -r requirements.txt
----
+```
 
-## 4. Configurer les clés AzureOpenAI
----
+### 4. Configurer les clés AzureOpenAI
+
+Créez un fichier `.streamlit/secrets.toml` et ajoutez :
+
+```toml
 [embedding]
 azure_api_key = "VOTRE_CLE"
 azure_endpoint = "https://votre-endpoint.openai.azure.com/"
@@ -58,16 +58,21 @@ azure_api_key = "VOTRE_CLE"
 azure_endpoint = "https://votre-endpoint.openai.azure.com/"
 azure_deployment = "chat-deployment"
 azure_api_version = "2024-03-01-preview"
----
+```
 
-## 5. Lancer l'application
----
+### 5. Lancer l'application
+
+```bash
 streamlit run app.py
+```
+
+L’interface est accessible à l’adresse : [https://rag-project-baronebiffe.streamlit.app](https://rag-project-baronebiffe.streamlit.app)
+
 ---
-L’interface est accessible à l’adresse : https://rag-project-baronebiffe.streamlit.app/
 
+## 🗂️ Structure du projet
 
-#Structure du projet
+```
 .
 ├── app.py                    # Interface principale Streamlit
 ├── rag/
@@ -76,47 +81,53 @@ L’interface est accessible à l’adresse : https://rag-project-baronebiffe.st
 ├── requirements.txt
 └── .streamlit/
     └── secrets.toml         # Clés API (non versionnées)
+```
 
+---
 
-## Fonctionnalités principales
+## ✅ Fonctionnalités principales
 
-Fonction	Description
-📄 Téléversement de documents	Support des fichiers PDF
-🤖 Chat intelligent	Posez des questions en langage naturel
-🧠 Vectorisation	FAISS + Azure OpenAI pour recherche sémantique
-⭐ Feedback	Système de notation (1 à 5 étoiles) + commentaires
-🕓 Historique	Visualisation des anciennes questions
-🌐 Langues	Choix de langue pour la réponse (FR, EN, ES, DE)
+| Fonction                   | Description                                        |
+|---------------------------|----------------------------------------------------|
+| 📄 Téléversement          | Support des fichiers PDF                          |
+| 🤖 Chat intelligent       | Posez des questions en langage naturel            |
+| 🧠 Vectorisation          | FAISS + Azure OpenAI pour recherche sémantique    |
+| ⭐ Feedback                | Système de notation (1 à 5 étoiles) + commentaires|
+| 🕓 Historique              | Visualisation des anciennes questions             |
+| 🌐 Langues                | Choix : FR, EN, ES, DE                            |
 
+---
 
+## 👣 Exemple de flow utilisateur
 
- Exemple de flow utilisateur
+1. L'utilisateur téléverse un fichier PDF.
+2. Il pose une question en français.
+3. Le système vectorise le PDF et interroge Azure OpenAI.
+4. La réponse est affichée dans le chat.
+5. L'utilisateur évalue la réponse et ajoute un commentaire.
+6. Les données sont stockées dans la base SQLite.
 
-* L'utilisateur téléverse un fichier PDF.
-* Il pose une question en français.
-* Le système vectorise le PDF et interroge Azure OpenAI.
-* La réponse est affichée dans le chat.
-* L'utilisateur peut évaluer la réponse et ajouter un commentaire.
-* La question, la réponse et le feedback sont stockés.
+---
 
+## 🧹 Personnalisation
 
-## Personnalisation
+Tu peux modifier :
+- les paramètres du moteur dans `rag/my_langchain.py`
+- les langues proposées
+- les types de fichiers acceptés (ajouter Word, TXT...)
 
-Il est possible de modifier les paramètres du moteur dans rag/my_langchain.py, changer les langues proposées, ou ajouter d'autres types de documents (Word, TXT, etc.).
+---
 
+## 💻 Exigences
 
- Exigences
+- Python 3.10+
+- Azure OpenAI déployé avec :
+  - `text-embedding-ada-002`
+  - `gpt-35-turbo` ou `gpt-4`
 
-    Python 3.10+
+---
 
-    Azure OpenAI déployé avec :
+## 🤝 Contribuer
 
-        Un modèle d’embedding (text-embedding-ada-002)
-
-        Un modèle de chat (gpt-35-turbo ou gpt-4)
-
-
-## Contribuer
-
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou proposer une pull request :)
-
+Les contributions sont les bienvenues !  
+N'hésitez pas à ouvrir une *issue* ou soumettre une *pull request* 🚀
