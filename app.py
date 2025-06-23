@@ -4,9 +4,9 @@ import tempfile
 import streamlit as st
 import pandas as pd
 
-from rag.langchain import answer_question
-from rag.langchain import delete_file_from_store
-from rag.langchain import store_pdf_file
+from rag.my_langchain import answer_question
+from rag.my_langchain import delete_file_from_store
+from rag.my_langchain import store_pdf_file
 
 st.set_page_config(
     page_title="Analyse de documents",
