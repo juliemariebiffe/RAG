@@ -1,51 +1,70 @@
+import os
+from datetime import datetime
 import streamlit as st
-from llama_index.core import (
-    VectorStoreIndex,
-    SimpleVectorStore,
-    ServiceContext,
-    Document,
-    TextNode,
-    VectorStoreQuery,
-)
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.embeddings.openai import AzureOpenAIEmbedding
-from llama_index.llms.openai import AzureOpenAI
-import fitz  # PyMuPDF
 
-import pandas as pd
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, ServiceContext
+from llama_index.core.node_parser import SimpleNodeParser
+from llama_index.core.embeddings import resolve_embed_model
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.chat_engine import CondenseQuestionChatEngine
 
-from utils import get_pdf_text
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chat_models import ChatOpenAI
 
-def process_files_with_llama_index(uploaded_files):
-    pdf_text = get_pdf_text(uploaded_files)
 
-    llm = AzureOpenAI(
-        model="gpt-35-turbo",
-        deployment_name=st.secrets["chat"]["azure_gpt_deployment"],
-        api_key=st.secrets["chat"]["azure_api_key"],
-        azure_endpoint=st.secrets["chat"]["azure_endpoint"],
-        api_version=st.secrets["chat"]["azure_api_version"],
-    )
-    embed_model = AzureOpenAIEmbedding(
-        model="text-embedding-ada-002",
-        deployment_name=st.secrets["embedding"]["azure_embedding_deployment"],
-        api_key=st.secrets["embedding"]["azure_api_key"],
-        azure_endpoint=st.secrets["embedding"]["azure_endpoint"],
-        api_version=st.secrets["embedding"]["azure_api_version"],
-    )
+class MyLlamaIndex:
+    def __init__(self):
+        config = st.secrets
 
-    service_context = ServiceContext.from_defaults(llm=llm, embed_model=embed_model)
+        # Initialisation des embeddings et du modèle
+        self.embed_model = resolve_embed_model("local")
 
-    documents = [Document(text=pdf_text)]
-    splitter = SentenceSplitter()
-    nodes = splitter.get_nodes_from_documents(documents)
+        self.llm = ChatOpenAI(
+            openai_api_key=config["chat"]["azure_api_key"],
+            openai_api_base=config["chat"]["azure_endpoint"],
+            openai_api_version=config["chat"]["azure_api_version"],
+            deployment_name=config["chat"]["azure_deployment"],
+            model="gpt-35-turbo",  # ou gpt-4 selon ton usage
+        )
 
-    vector_store = SimpleVectorStore()
-    index = VectorStoreIndex(nodes, service_context=service_context, vector_store=vector_store)
+        self.service_context = ServiceContext.from_defaults(
+            llm=self.llm,
+            embed_model=self.embed_model,
+        )
 
-    return index, nodes
+        self.documents = []
+        self.index = None
+        self.chat_engine = None
 
-def ask_llama_index(index, query, top_k):
-    query_engine = index.as_query_engine(similarity_top_k=top_k)
-    response = query_engine.query(query)
-    return str(response)
+    def store_pdf_file(self, file_path: str, doc_name: str):
+        reader = SimpleDirectoryReader(input_files=[file_path])
+        new_docs = reader.load_data()
+
+        for doc in new_docs:
+            doc.metadata["name"] = doc_name
+            doc.metadata["insert_date"] = str(datetime.now())
+
+        self.documents.extend(new_docs)
+        self._update_index()
+
+    def _update_index(self):
+        if self.documents:
+            self.index = VectorStoreIndex.from_documents(
+                self.documents, service_context=self.service_context
+            )
+            self.chat_engine = self.index.as_chat_engine(
+                chat_mode="condense_question",
+                verbose=True
+            )
+
+    def answer_question(self, question: str) -> str:
+        if not self.chat_engine:
+            return "Aucun document indexé, veuillez charger des documents."
+
+        response = self.chat_engine.chat(question)
+        return str(response)
+
+    def clear_index(self):
+        self.documents = []
+        self.index = None
+        self.chat_engine = None
