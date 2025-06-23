@@ -1,6 +1,5 @@
 # Analyse de Documents avec IA (Streamlit App)
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Built with](https://img.shields.io/badge/Built_with-Streamlit-blue)
 ![Powered by](https://img.shields.io/badge/Powered_by-Azure_OpenAI-orange)
 
