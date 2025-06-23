@@ -17,20 +17,15 @@ if 'stored_files' not in st.session_state:
 if 'framework' not in st.session_state:
     st.session_state['framework'] = "langchain"
 
-
 def clear_indexes():
-    # Remise à zéro des index dans chaque module
     my_langchain.clear_index()
-    # Pour llamaindex, on suppose qu'il y a un index global à réinitialiser (adapter selon ton implémentation)
-    if hasattr(llamaindex, "index"):
-        llamaindex.index = None
-
+    if hasattr(llamaindex, "clear_index"):
+        llamaindex.clear_index()
 
 def main():
     st.title("Analyse de documents")
     st.subheader("Analysez vos documents avec une IA en les chargeant dans l'application. Puis posez toutes vos questions.")
 
-    # Choix du framework d'indexation
     framework = st.radio(
         "Choisissez le framework d'indexation",
         options=["langchain", "llamaindex"],
@@ -38,7 +33,6 @@ def main():
     )
 
     if framework != st.session_state['framework']:
-        # Changement de framework : on vide les fichiers stockés et on réinitialise les index
         st.session_state['stored_files'] = []
         clear_indexes()
         st.session_state['framework'] = framework
@@ -75,7 +69,7 @@ def main():
         df = pd.DataFrame(file_info)
         st.table(df)
 
-    # Gestion suppression fichiers supprimés dans l'interface
+    # Suppression des fichiers supprimés dans l'interface
     current_files = {f['Nom du fichier'] for f in file_info}
     files_to_be_deleted = set(st.session_state['stored_files']) - current_files
     for name in files_to_be_deleted:
@@ -83,7 +77,7 @@ def main():
         if framework == "langchain":
             my_langchain.delete_file_from_store(name)
         else:
-            # llamaindex ne supporte pas la suppression, on ignore
+            # Suppression non supportée pour llamaindex
             pass
 
     k = st.slider(
@@ -109,7 +103,7 @@ def main():
             if framework == "langchain":
                 model_response = my_langchain.answer_question(question, language, k)
             else:
-                model_response = llamaindex.answer_question(question)
+                model_response = llamaindex.answer_question(question, k=k)
             st.text_area("Zone de texte, réponse du modèle", value=model_response, height=200)
 
             feedback = st.radio(
@@ -121,7 +115,6 @@ def main():
             )
             if feedback is not None:
                 print(f"Feedback utilisateur: {feedback}")
-
 
 if __name__ == "__main__":
     main()
